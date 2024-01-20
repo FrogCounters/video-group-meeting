@@ -43,13 +43,51 @@ const NewRoom = ({ match }) => {
   const peerRef = useRef();
   const [hasPeer, setHasPeer] = useState(false);
   const isReady = useRef(false);
+  const [readyState, setReadyState] = useState(false);
 
   const [timesHit, setTimesHit] = useState(0);
   const [timesPunched, setTimesPunched] = useState(0);
   const lastLeftWrist = useRef(640);
   const lastRightWrist = useRef(0);
-  const [lastNose, setLastNose] = useState(0);
+  const lastNose = useRef(320);
+  const [health, setHealth] = useState(100);
+  const [enemyHealth, setEnemyHealth] = useState(100);
+  const [gameState, setGameState] = useState('waiting'); // ['waiting', 'playing', 'win', 'lose']
 
+  const handleLeftPunch = () => {
+    peerRef.current.send(JSON.stringify({
+      type: 'punch',
+      direction: 'left',
+      timestamp: Date.now(),
+    }));
+  }
+
+  const handleRightPunch = () => {
+    console.log("Right Punch")
+    peerRef.current.send(JSON.stringify({
+      type: 'punch',
+      direction: 'right',
+      timestamp: Date.now(),
+    }));
+  }
+
+  const handlePunched = (direction) => {
+    console.log('nose', lastNose.current)
+    if (direction == 'right' && lastNose.current > 320) {
+      setHealth(health => health - 10)
+    } else if (direction == 'left' && lastNose.current < 320) {
+      setHealth(health => health - 10)
+    }
+  }
+
+  useEffect(() => {
+    if (peerRef.current == null) return;
+    peerRef.current.send(JSON.stringify({
+      type: 'health',
+      health: health,
+      timestamp: Date.now(),
+    }));
+  }, [health])
 
   const whileReady = (poses) => {
     console.log("While Readying")
@@ -61,16 +99,18 @@ const NewRoom = ({ match }) => {
     // Check for left punch
     if (!isPointValid(leftWrist) && !isPointValid(leftElbow)) {
       setTimesPunched(timesPunched => timesPunched + 1);
-      console.log("Left Punch");
+      handleLeftPunch();
       isReady.current = false;
+      setReadyState(false);
       return
     }
 
     // Check for right punch
     if (!isPointValid(rightWrist) && !isPointValid(rightElbow)) {
       setTimesPunched(timesPunched => timesPunched + 1);
-      console.log("Right Punch");
+      handleRightPunch();
       isReady.current = false;
+      setReadyState(false);
       return
     }
   }
@@ -97,6 +137,7 @@ const NewRoom = ({ match }) => {
     if (allPointsValid && leftDistance <= 70 && rightDistance <= 70) {
       // setIsReady(true);
       isReady.current = true;
+      setReadyState(true);
     }
   }
 
@@ -114,11 +155,13 @@ const NewRoom = ({ match }) => {
     }
 
     if (isPointValid(nose)) {
-      setLastNose(nose.x.toFixed(2));
+      lastNose.current = nose.x.toFixed(2);
     }
   }
 
   useEffect(() => {
+    if (!hasPeer) return;
+
     let detector;
     let animationFrameId;
 
@@ -172,7 +215,30 @@ const NewRoom = ({ match }) => {
     return () => {
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
     };
-  }, []);
+  }, [hasPeer]);
+
+  useEffect(() => {
+    if (health <= 0) {
+      peerRef.current.send(JSON.stringify({
+        type: 'gameover',
+        timestamp: Date.now(),
+      }));
+      setGameState('lose');
+    }
+  }, [health]);
+
+  const handleData = (data) => {
+    const parsed = JSON.parse(data);
+    console.log("parsed", parsed)
+    const { type, direction, health } = parsed
+    if (type == 'punch') {
+      handlePunched(direction)
+    } else if (type == 'gameover') {
+      setGameState('win');
+    } else if (type == 'health') {
+      setEnemyHealth(health);
+    }
+  }
 
   const createPeer = (userId, caller, stream) => {
     const peer = new Peer({
@@ -194,6 +260,8 @@ const NewRoom = ({ match }) => {
       peer.destroy();
     });
 
+    peer.on('data', handleData)
+
     return peer;
   }
 
@@ -212,6 +280,8 @@ const NewRoom = ({ match }) => {
     peer.on('disconnect', () => {
       peer.destroy();
     });
+
+    peer.on('data', handleData)
 
     peer.signal(incomingSignal);
     return peer;
@@ -247,10 +317,12 @@ const NewRoom = ({ match }) => {
           const peer = addPeer(signal, from, stream);
           peerRef.current = peer;
           setHasPeer(true)
+          setGameState('playing');
         })
         socket.on('FE-call-accepted', ({ signal, answerId }) => {
           console.log('FE-call-accepted')
           peerRef.current.signal(signal);
+          setGameState('playing');
         })
       });
 
@@ -263,10 +335,34 @@ const NewRoom = ({ match }) => {
   }, [roomId]);
 
   return (<div>
-    <video ref={userVideoRef} autoPlay muted playsInline style={{transform: 'scaleX(-1)'}}>
-    </video>
-    <PeerVideo hasPeer={hasPeer} peerRef={peerRef} />
-    {roomId}
+    { (gameState == 'playing' || gameState == 'waiting') && (<>
+      <div>
+        { gameState == 'playing' && (<>
+          <div>Health: { enemyHealth }</div>
+          <div>Ready: { String(readyState) }</div>
+        </>)}
+        <PeerVideo hasPeer={hasPeer} peerRef={peerRef} />
+      </div>
+      <div style={{
+        position: 'absolute',
+        bottom: 0,
+        right: 0,
+        transform: 'scale(0.4)'
+      }}>
+        { gameState == 'playing' && (<>
+          <div style={{ transform: 'scale(2.5)'}}>Health: { health }</div>
+        </>)}
+        <video ref={userVideoRef} autoPlay muted playsInline style={{ paddingTop: '20px', transform: 'scaleX(-1)' }} />
+      </div>
+    </>)}
+
+    { gameState == 'win' && (<>
+      <div>You win!</div>
+    </>)}
+
+    { gameState == 'lose' && (<>
+      <div>You lose D:</div>
+    </>)}
   </div>)
 }
 
