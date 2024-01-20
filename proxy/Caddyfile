@@ -1,0 +1,4 @@
+:8888 {
+	reverse_proxy /socket.io/* :3001
+	reverse_proxy * :3002
+}

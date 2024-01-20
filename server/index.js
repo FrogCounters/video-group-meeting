@@ -1,11 +1,21 @@
 const express = require('express');
 const app = express();
 const http = require('http').createServer(app);
-const io = require('socket.io')(http);
+const io = require('socket.io')(http, {
+  cors: {
+    origin: '*',
+  }
+});
 const PORT = process.env.PORT || 3001;
 const path = require('path');
 
 let socketList = {};
+
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -51,21 +61,24 @@ io.on('connection', (socket) => {
   /**
    * Join Room
    */
-  socket.on('BE-join-room', ({ roomId, userName }) => {
+  socket.on('BE-join-room', ({ roomId }) => {
     // Socket Join RoomName
     socket.join(roomId);
-    socketList[socket.id] = { userName, video: true, audio: true };
+    socketList[socket.id] = { video: true };
 
+    console.log('socketList', socketList);
     // Set User List
     io.sockets.in(roomId).clients((err, clients) => {
+      console.log('clients', clients);
       try {
         const users = [];
         clients.forEach((client) => {
           // Add User List
           users.push({ userId: client, info: socketList[client] });
         });
-        socket.broadcast.to(roomId).emit('FE-user-join', users);
-        // io.sockets.in(roomId).emit('FE-user-join', users);
+        console.log('users', users)
+        //socket.broadcast.to(roomId).emit('FE-user-join', users);
+        io.sockets.in(roomId).emit('FE-user-join', users);
       } catch (e) {
         io.sockets.in(roomId).emit('FE-error-user-exist', { err: true });
       }

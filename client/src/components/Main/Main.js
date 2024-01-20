@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import styled from 'styled-components';
 import socket from '../../socket';
 
+/*
 const Main = (props) => {
   const roomRef = useRef();
   const userRef = useRef();
@@ -51,6 +52,31 @@ const Main = (props) => {
     </MainContainer>
   );
 };
+*/
+
+const Main = ({ history }) => {
+  const joinRoom = (e) => {
+    e.preventDefault();
+    const roomId = e.target[0].value;
+    history.push(`/room/${roomId}`)
+  }
+
+  const createRoom = () => {
+    const roomId = Math.floor(Math.random() * 1000);
+    history.push(`/room/${roomId}`)
+  }
+
+  return (<div className='text-red'>
+    <button onClick={createRoom}>
+      Create Room
+    </button>
+    <form onSubmit={joinRoom}>
+      <input type='number' placeholder='Room #' />
+      <button>Join Room</button>
+    </form>
+  
+  </div>)
+}
 
 const MainContainer = styled.div`
   display: flex;
