@@ -53,8 +53,11 @@ const NewRoom = ({ match }) => {
   const [health, setHealth] = useState(100);
   const [enemyHealth, setEnemyHealth] = useState(100);
   const [gameState, setGameState] = useState('waiting'); // ['waiting', 'playing', 'win', 'lose']
+  const lastPunch = useRef({timestamp: 0, direction: ''})
 
   const handleLeftPunch = () => {
+    if (Date.now() - lastPunch.current.timestamp < 300) return
+    lastPunch.current = {timestamp: Date.now(), direction: 'left'}
     peerRef.current.send(JSON.stringify({
       type: 'punch',
       direction: 'left',
@@ -63,7 +66,8 @@ const NewRoom = ({ match }) => {
   }
 
   const handleRightPunch = () => {
-    console.log("Right Punch")
+    if (Date.now() - lastPunch.current.timestamp < 300) return
+    lastPunch.current = {timestamp: Date.now(), direction: 'right'}
     peerRef.current.send(JSON.stringify({
       type: 'punch',
       direction: 'right',
@@ -123,10 +127,14 @@ const NewRoom = ({ match }) => {
     const rightElbow = poses[8];
     const leftShoulder = poses[5];
     const rightShoulder = poses[6];
+    const leftEar = poses[3];
+    const rightEar = poses[4];
 
     const allPointsValid = [leftWrist, rightWrist, leftElbow, rightElbow, leftShoulder, rightShoulder].every(isPointValid);
     const leftDistance = euclideanDistance(leftWrist, leftShoulder);
     const rightDistance = euclideanDistance(rightWrist, rightShoulder);
+    const leftHandToEar = euclideanDistance(leftWrist, leftEar);
+    const rightHandToEar = euclideanDistance(rightWrist, rightEar);
 
     // console.log({
     //   allPointsValid: allPointsValid,
@@ -134,7 +142,8 @@ const NewRoom = ({ match }) => {
     //   rightDistance: rightDistance,
     // })
 
-    if (allPointsValid && leftDistance <= 70 && rightDistance <= 70) {
+    if (allPointsValid && leftDistance <= 70 && rightDistance <= 70 ||
+        leftHandToEar <= 70 || rightHandToEar <= 70) {
       // setIsReady(true);
       isReady.current = true;
       setReadyState(true);
