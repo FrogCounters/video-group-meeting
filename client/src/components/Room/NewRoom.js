@@ -36,7 +36,7 @@ const euclideanDistance = (pointA, pointB) => {
   return Math.sqrt(Math.pow(pointA.x - pointB.x, 2) + Math.pow(pointA.y - pointB.y, 2));
 };
 
-const NewRoom = ({ match }) => {
+const NewRoom = ({ match, history }) => {
   const [videoDevices, setVideoDevices] = useState([]);
   const roomId = match.params.roomId
   const userVideoRef = useRef();
@@ -171,6 +171,7 @@ const NewRoom = ({ match }) => {
 
   useEffect(() => {
     if (!hasPeer) return;
+    return;
 
     let detector;
     let animationFrameId;
@@ -344,35 +345,44 @@ const NewRoom = ({ match }) => {
     };
   }, [roomId]);
 
-  return (<div>
-    { (gameState == 'playing' || gameState == 'waiting') && (<>
-      <div>
-        { gameState == 'playing' && (<>
-          <div>Health: { enemyHealth }</div>
-          <div>Ready: { String(readyState) }</div>
-        </>)}
-        <PeerVideo hasPeer={hasPeer} peerRef={peerRef} />
-      </div>
-      <div style={{
-        position: 'absolute',
-        bottom: 0,
-        right: 0,
-        transform: 'scale(0.4)'
-      }}>
-        { gameState == 'playing' && (<>
-          <div style={{ transform: 'scale(2.5)'}}>Health: { health }</div>
-        </>)}
-        <video ref={userVideoRef} autoPlay muted playsInline style={{ paddingTop: '20px', transform: 'scaleX(-1)' }} />
-      </div>
-    </>)}
+  return (<div className='w-full h-screen flex flex-col justify-between' style={{backgroundColor: "#111111"}}>
+    <div className='flex flex-grow w-full text-white'>
+      { (gameState == 'playing' || gameState == 'waiting') && (<>
+        <div className='w-full flex flex-row justify-center items-center'>
+          <div className='flex flex-col text-white'>
+            { gameState == 'playing' && (<>
+              <div>Health: { enemyHealth }</div>
+              <div>Ready: { String(readyState) }</div>
+            </>)}
+            <PeerVideo hasPeer={hasPeer} peerRef={peerRef} />
+          </div>
+        </div>
+        <div style={{
+          position: 'absolute',
+          bottom: 0,
+          right: 0,
+          transform: 'scale(0.4)'
+        }}>
+          { gameState == 'playing' && (<>
+            <div style={{ transform: 'scale(2.5)'}}>Health: { health }</div>
+          </>)}
+          <video ref={userVideoRef} autoPlay muted playsInline style={{ paddingTop: '20px', transform: 'scaleX(-1)' }} />
+        </div>
+      </>)}
 
-    { gameState == 'win' && (<>
-      <div>You win!</div>
-    </>)}
+      { gameState == 'win' && (<>
+        <div>You win!</div>
+      </>)}
 
-    { gameState == 'lose' && (<>
-      <div>You lose D:</div>
-    </>)}
+      { gameState == 'lose' && (<>
+        <div>You lose D:</div>
+      </>)}
+    </div>
+    <div className='z-30 self-end w-full h-20 flex flex-row gap-x-8 items-center justify-end px-6' style={{backgroundColor:"rgba(255, 255, 255, 0.3)"}}>
+      <button onClick={() => history.push('/')} className='text-white bg-red-600 font-bold text-lg px-4 py-1 rounded-lg'>
+        End
+      </button>
+    </div>
   </div>)
 }
 

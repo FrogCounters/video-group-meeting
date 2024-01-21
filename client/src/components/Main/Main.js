@@ -1,60 +1,22 @@
 import React, { useRef, useState, useEffect } from 'react';
+import image from '../../img/logo.png';
 import styled from 'styled-components';
 import socket from '../../socket';
 
-/*
-const Main = (props) => {
-  const roomRef = useRef();
-  const userRef = useRef();
-  const [err, setErr] = useState(false);
-  const [errMsg, setErrMsg] = useState('');
-
-  useEffect(() => {
-
-    socket.on('FE-error-user-exist', ({ error }) => {
-      if (!error) {
-        const roomName = roomRef.current.value;
-        const userName = userRef.current.value;
-
-        sessionStorage.setItem('user', userName);
-        props.history.push(`/room/${roomName}`);
-      } else {
-        setErr(error);
-        setErrMsg('User name already exist');
-      }
-    });
-  }, [props.history]);
-
-  function clickJoin() {
-    const roomName = roomRef.current.value;
-    const userName = userRef.current.value;
-
-    if (!roomName || !userName) {
-      setErr(true);
-      setErrMsg('Enter Room Name or User Name');
-    } else {
-      socket.emit('BE-check-user', { roomId: roomName, userName });
-    }
+const Modal = ({ children, show }) => {
+  if (!show) {
+    return (<></>);
   }
-
   return (
-    <MainContainer>
-      <Row>
-        <Label htmlFor="roomName">Room Name</Label>
-        <Input type="text" id="roomName" ref={roomRef} />
-      </Row>
-      <Row>
-        <Label htmlFor="userName">User Name</Label>
-        <Input type="text" id="userName" ref={userRef} />
-      </Row>
-      <JoinButton onClick={clickJoin}> Join </JoinButton>
-      {err ? <Error>{errMsg}</Error> : null}
-    </MainContainer>
-  );
-};
-*/
+    <div className='absolute rounded-2xl shadow bg-white py-10 px-8 ml-32'>
+      {children}
+    </div>    
+  )
+}
 
 const Main = ({ history }) => {
+  const [showJoin, setShowJoin] = useState(false);
+
   const joinRoom = (e) => {
     e.preventDefault();
     const roomId = e.target[0].value;
@@ -66,64 +28,30 @@ const Main = ({ history }) => {
     history.push(`/room/${roomId}`)
   }
 
-  return (<div className='text-red'>
-    <button onClick={createRoom}>
-      Create Room
-    </button>
-    <form onSubmit={joinRoom}>
-      <input type='number' placeholder='Room #' />
-      <button>Join Room</button>
-    </form>
-  
+  return (<div>
+    <img src={image} width={500} className='mb-12'></img>
+    <Modal show={showJoin}>
+      <form onSubmit={joinRoom} className='flex flex-col items-start gap-y-6'>
+        <h2 className='text-black text-2xl font-bold'>Join Meeting</h2>
+        <input type="number" required placeholder='Meeting ID' className='border border-slate-600 active:border-blue-600 text-black text-xl px-2 py-1'></input>
+        <div className='flex flex-row gap-x-4 justify-end'>
+          <button onClick={() => setShowJoin(false)} className='px-4 py-1 rounded-xl border border-slate-600 text-black'>Cancel</button>
+          <button className='px-4 py-1 rounded-xl border border-slate-600 text-black'>Join</button>
+        </div>
+      </form>
+    </Modal>
+    <div className='rounded-2xl bg-white px-12 py-8 flex flex-col gap-y-4 items-center'>
+      <button onClick={() => setShowJoin(true)} style={{backgroundColor: "#3c64ed"}} className='rounded-xl border text-white font-bold w-96 text-center py-2'>
+        Join a Meeting
+      </button>
+      <button onClick={createRoom} className='rounded-xl border border-slate-600 text-black w-96 text-center py-2'>
+        Create a Meeting
+      </button>
+      <button onClick={createRoom} className='rounded-xl border border-slate-600 text-black w-96 text-center py-2'>
+        How to play?
+      </button>
+    </div>
   </div>)
 }
-
-const MainContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-`;
-
-const Row = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  margin-top: 15px;
-  line-height: 35px;
-`;
-
-const Label = styled.label``;
-
-const Input = styled.input`
-  width: 150px;
-  height: 35px;
-  margin-left: 15px;
-  padding-left: 10px;
-  outline: none;
-  border: none;
-  border-radius: 5px;
-`;
-
-const Error = styled.div`
-  margin-top: 10px;
-  font-size: 20px;
-  color: #e85a71;
-`;
-
-const JoinButton = styled.button`
-  height: 40px;
-  margin-top: 35px;
-  outline: none;
-  border: none;
-  border-radius: 15px;
-  color: #d8e9ef;
-  background-color: #4ea1d3;
-  font-size: 25px;
-  font-weight: 500;
-
-  :hover {
-    background-color: #7bb1d1;
-    cursor: pointer;
-  }
-`;
 
 export default Main;
