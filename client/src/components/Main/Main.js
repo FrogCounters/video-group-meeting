@@ -2,13 +2,14 @@ import React, { useRef, useState, useEffect } from 'react';
 import image from '../../img/logo.png';
 import styled from 'styled-components';
 import socket from '../../socket';
+import tutorial from '../../img/tutorial.png';
 
 const Modal = ({ children, show }) => {
   if (!show) {
     return (<></>);
   }
   return (
-    <div className='absolute rounded-2xl shadow bg-white py-10 px-8 ml-32'>
+    <div className='absolute rounded-2xl shadow-lg bg-white py-10 px-8 z-30'>
       {children}
     </div>    
   )
@@ -16,6 +17,7 @@ const Modal = ({ children, show }) => {
 
 const Main = ({ history }) => {
   const [showJoin, setShowJoin] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
 
   const joinRoom = (e) => {
     e.preventDefault();
@@ -28,7 +30,16 @@ const Main = ({ history }) => {
     history.push(`/room/${roomId}`)
   }
 
-  return (<div>
+  return (<>
+  <Modal show={showTutorial}>
+    <div className='flex flex-col items-start gap-y-6'>
+      <img src={tutorial} />
+      <div className='w-full flex flex-row gap-x-4 justify-end'>
+        <button onClick={() => setShowTutorial(false)} className='px-4 py-1 rounded-xl border border-slate-600 text-black'>Cancel</button>
+      </div>
+    </div>
+  </Modal>
+  <div className='relative'>
     <img src={image} width={500} className='mb-12'></img>
     <Modal show={showJoin}>
       <form onSubmit={joinRoom} className='flex flex-col items-start gap-y-6'>
@@ -47,11 +58,11 @@ const Main = ({ history }) => {
       <button onClick={createRoom} className='rounded-xl border border-slate-600 text-black w-96 text-center py-2'>
         Create a Meeting
       </button>
-      <button onClick={createRoom} className='rounded-xl border border-slate-600 text-black w-96 text-center py-2'>
+      <button onClick={() => setShowTutorial(true)} className='rounded-xl border border-slate-600 text-black w-96 text-center py-2'>
         How to play?
       </button>
     </div>
-  </div>)
+  </div></>)
 }
 
 export default Main;

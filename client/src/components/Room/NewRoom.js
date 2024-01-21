@@ -26,7 +26,7 @@ const PeerVideo = ({ hasPeer, peerRef }) => {
 };
 
 const isPointValid = (point) => {
-	return point.score > 0.33;
+	return point.score > DEFAULT_THRESHOLD;
 };
 
 const euclideanDistance = (pointA, pointB) => {
@@ -178,9 +178,8 @@ const NewRoom = ({ match, history }) => {
 		// })
 
 		if (
-			(allPointsValid && leftDistance <= 70 && rightDistance <= 70) ||
-			leftHandToEar <= 70 ||
-			rightHandToEar <= 70
+			allPointsValid && ((leftDistance <= 70 && rightDistance <= 70) ||
+			(leftHandToEar <= 70 && rightHandToEar <= 70))
 		) {
 			// setIsReady(true);
 			isReady.current = true;
