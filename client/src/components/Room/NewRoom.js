@@ -4,6 +4,7 @@ import socket from "../../socket";
 import * as poseDetection from "@tensorflow-models/pose-detection";
 import * as tf from "@tensorflow/tfjs-core";
 import "@tensorflow/tfjs-backend-webgl";
+import { HealthBar, ReadyCheck } from "../Visuals";
 
 import useSound from "use-sound";
 import punchSound from "../../punchSound.mp3";
@@ -359,7 +360,7 @@ const NewRoom = ({ match, history }) => {
 			console.log("socket.id", socket.id);
 			socket.emit("BE-join-room", { roomId, userName: "test" });
 			socket.on("FE-user-join", (users) => {
-				console.log("FE-user-join");
+				console.log("FE-user-join", users);
 				if (users.length == 2 && users[0].userId == socket.id) {
 					const peer = createPeer(users[1].userId, socket.id, stream);
 					peerRef.current = peer;
@@ -390,29 +391,38 @@ const NewRoom = ({ match, history }) => {
 
 	useDidMountEffect(() => {
 		playSound();
-	}, [timesPunched]);
+	}, [enemyHealth]);
 
 	return (
-		<div className="w-full h-screen flex flex-col justify-between" style={{ backgroundColor: "#111111" }}>
-			<div className="flex flex-grow w-full text-white">
+		<div
+			className="w-full h-screen flex flex-col justify-between items-center"
+			style={{ backgroundColor: "#111111" }}
+		>
+			<div className="flex flex-grow flex-col w-full text-white">
+				<h2 className="text-2xl font-semibold mt-6">Meeting #{roomId}</h2>
+
 				{(gameState == "playing" || gameState == "waiting") && (
 					<>
-						<div className="w-full flex flex-row justify-center items-center">
-							{gameState == "playing" && (
-								<>
-									<div>Health: {enemyHealth}</div>
-									<div>Ready: {String(readyState)}</div>
-								</>
-							)}
-							<div className="flex flex-col text-white">
-								{/* {gameState == "playing" && (
+						{gameState == "waiting" && (
+							<>
+								<h2 className="text-white text-2xl">Waiting for opponent...</h2>
+							</>
+						)}
+
+						<div className="w-full flex flex-row justify-center items-center mt-8">
+							<div className="flex flex-col text-white items-center gap-y-4">
+								{gameState == "playing" && (
 									<>
-										<div>Health: {enemyHealth}</div>
-										<div>Ready: {String(readyState)}</div>
+										<ReadyCheck isReady={readyState} />
+										<HealthBar health={enemyHealth} />
 									</>
-								)} */}
-								<div className={`${enemyAnimation} absolute z-50 h-[480px] w-[640px] opacity-60`}></div>
-								<PeerVideo hasPeer={hasPeer} peerRef={peerRef} />
+								)}
+								<div>
+									<div
+										className={`${enemyAnimation} absolute z-50 h-[480px] w-[640px] opacity-60`}
+									></div>
+									<PeerVideo hasPeer={hasPeer} peerRef={peerRef} />
+								</div>
 							</div>
 						</div>
 						<div
@@ -425,7 +435,12 @@ const NewRoom = ({ match, history }) => {
 						>
 							{gameState == "playing" && (
 								<>
-									<div style={{ transform: "scale(2.5)" }}>Health: {health}</div>
+									<div
+										style={{ transform: "scale(2.5)" }}
+										className="w-full flex flex-row justify-center items-center mb-8"
+									>
+										<HealthBar health={health} />
+									</div>
 								</>
 							)}
 							<div className={`${animation} absolute z-50 h-[480px] w-[640px] opacity-60`}></div>
@@ -442,13 +457,21 @@ const NewRoom = ({ match, history }) => {
 
 				{gameState == "win" && (
 					<>
-						<div>You win!</div>
+						<div className="w-full flex justify-center">
+							<div className="rounded-lg bg-white px-8 py-6 shadow-lg mt-8">
+								<h2 className="text-black text-2xl font-bold">You win! 🏆</h2>
+							</div>
+						</div>
 					</>
 				)}
 
 				{gameState == "lose" && (
 					<>
-						<div>You lose D:</div>
+						<div className="w-full flex justify-center">
+							<div className="rounded-lg bg-white px-8 py-6 shadow-lg mt-8">
+								<h2 className="text-black text-2xl font-bold">You lose! 😔</h2>
+							</div>
+						</div>
 					</>
 				)}
 			</div>
