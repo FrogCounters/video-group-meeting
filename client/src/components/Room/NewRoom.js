@@ -20,6 +20,7 @@ const PeerVideo = ({ hasPeer, peerRef }) => {
   
   return (
     <video
+      width={640}
       muted
       playsInline
       ref={ref}
