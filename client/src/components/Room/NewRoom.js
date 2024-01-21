@@ -346,9 +346,15 @@ const NewRoom = ({ match, history }) => {
   }, [roomId]);
 
   return (<div className='w-full h-screen flex flex-col justify-between items-center' style={{backgroundColor: "#111111"}}>
-    <div className='flex flex-grow w-full text-white'>
+    <div className='flex flex-grow flex-col w-full text-white'>
+      <h2 className='text-2xl font-semibold mt-6'>Meeting #{roomId}</h2>
+
       { (gameState == 'playing' || gameState == 'waiting') && (<>
-        <div className='w-full flex flex-row justify-center items-center'>
+        { gameState == 'waiting' && (<>
+          <h2 className='text-white text-2xl'>Waiting for opponent...</h2>
+        </>)}
+
+        <div className='w-full flex flex-row justify-center items-center mt-8'>
           <div className='flex flex-col text-white items-center gap-y-4'>
             { gameState == 'playing' && (<>
               <ReadyCheck isReady={readyState} />
@@ -374,7 +380,7 @@ const NewRoom = ({ match, history }) => {
 
       { gameState == 'win' && (<>
         <div className='w-full flex justify-center'>
-          <div className='rounded-lg bg-white px-8 py-6 shadow-lg'>
+          <div className='rounded-lg bg-white px-8 py-6 shadow-lg mt-8'>
             <h2 className='text-black text-2xl font-bold'>You win! 🏆</h2>
           </div>
         </div>
@@ -382,7 +388,7 @@ const NewRoom = ({ match, history }) => {
 
       { gameState == 'lose' && (<>
         <div className='w-full flex justify-center'>
-          <div className='rounded-lg bg-white px-8 py-6'>
+          <div className='rounded-lg bg-white px-8 py-6 shadow-lg mt-8'>
             <h2 className='text-black text-2xl font-bold'>You lose! 😔</h2>
           </div>
         </div>
